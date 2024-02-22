@@ -1,6 +1,6 @@
 # Machine Vision
 
-![My Image](./public/goatOriginal.jpg)
+![My Image](./public/finalOutput.png)
 
 ## Installation
 
