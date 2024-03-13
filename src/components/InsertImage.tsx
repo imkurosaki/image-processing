@@ -28,9 +28,9 @@ export default function InsertImage() {
         });
 
         setRgbAtom({
-            red: 0,
-            blue: 0,
-            green: 0
+            red: null,
+            blue: null,
+            green: null
         });
 
         const file: any = e.target.files[0];

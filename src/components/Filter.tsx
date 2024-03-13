@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { colorShades } from "../lib/data"
+import { colorShades } from "../lib/data";
+import { rgbAtom } from "../atom/atom";
+import { useSetRecoilState } from "recoil";
 
 
 export default function Filter(props: { colorHandle: Function, originalImage: Function }) {
     const [filterColors, setFilterColors] = useState(colorShades)
+    const setRgbAtom = useSetRecoilState(rgbAtom);
     const imageHighlight = (id: number): void => {
         const newColorShades: Array<any> = colorShades.map((color: any) => {
             if (color.id === id) {
@@ -37,6 +40,11 @@ export default function Filter(props: { colorHandle: Function, originalImage: Fu
                             imageHighlight(shades.id);
                             props.originalImage();
                             props.colorHandle(shades.color);
+                            setRgbAtom({
+                                red: null,
+                                blue: null,
+                                green: null
+                            });
                         }}
                             className={`${shades.selected && "border-4 border-yellow-400"} rounded-lg col-span-1 shadow-md shadow-gray-700`} >
                             <img src={`/public/${shades.image}`} className="w-20 h-16 rounded-lg hover:border-2 border-black" />

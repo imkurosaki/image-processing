@@ -1,5 +1,5 @@
 
-const colorOptions: Function = (image: ImageData, ref: any, color: string, enhancer: IenhancersAtom, rgbAtomState?: IrgbAtom, inputThreshold?: number): void => {
+const colorOptions: Function = (image: ImageData, ref: any, color: string, enhancer: IenhancersAtom, rgbAtomState?: IrgbAtom, inputThreshold?: number | any): void => {
     const canvas: any = ref;
     canvas.width = image.width;
     canvas.heigth = image.height;
@@ -20,6 +20,16 @@ const colorOptions: Function = (image: ImageData, ref: any, color: string, enhan
             inputThreshold = inputThreshold || 128;
             ctx.putImageData(binary(imageProperties, inputThreshold, enhancer), 0, 0);
             break;
+        case "segmentedBinary":
+            ctx.putImageData(segmentedBinary(imageProperties, inputThreshold, enhancer), 0, 0);
+            break;
+        case "segmentedBinaryRange":
+            ctx.putImageData(segmentedBinaryRange(imageProperties, inputThreshold, enhancer), 0, 0);
+            break;
+        case "binaryRange":
+            inputThreshold = inputThreshold || { t1: 128, t2: 150 };
+            ctx.putImageData(binaryRange(imageProperties, inputThreshold, enhancer), 0, 0);
+            break;
         case "grayscale":
             ctx.putImageData(grayScale(imageProperties, enhancer), 0, 0);
             break;
@@ -27,16 +37,16 @@ const colorOptions: Function = (image: ImageData, ref: any, color: string, enhan
             ctx.putImageData(sepian(imageProperties, rgbAtomState, enhancer), 0, 0);
             break;
         case "magenta":
-            ctx.putImageData(rgb(imageProperties, { red: 255, blue: 255 }, rgbAtomState, enhancer), 0, 0);
+            ctx.putImageData(rgb(imageProperties, { red: 255, blue: 255, green: 0 }, rgbAtomState, enhancer), 0, 0);
             break;
         case "green":
-            ctx.putImageData(rgb(imageProperties, { red: 0, blue: 0 }, rgbAtomState, enhancer), 0, 0);
+            ctx.putImageData(rgb(imageProperties, { red: 0, blue: 0, green: 255 }, rgbAtomState, enhancer), 0, 0);
             break;
         case "blue":
-            ctx.putImageData(rgb(imageProperties, { red: 0, blue: 255 }, rgbAtomState, enhancer), 0, 0);
+            ctx.putImageData(rgb(imageProperties, { red: 0, blue: 255, green: 0 }, rgbAtomState, enhancer), 0, 0);
             break;
         case "red":
-            ctx.putImageData(rgb(imageProperties, { red: 255, blue: 0 }, rgbAtomState, enhancer), 0, 0);
+            ctx.putImageData(rgb(imageProperties, { red: 255, blue: 0, green: 0 }, rgbAtomState, enhancer), 0, 0);
             break;
         case "cyan":
             ctx.putImageData(cyan(imageProperties, enhancer), 0, 0);
@@ -66,6 +76,7 @@ const original: Function = (imageProperties: IimageProperties, enhancer: Ienhanc
             data[x] = 255 - data[x];
             data[x + 1] = 255 - data[x + 1];
             data[x + 2] = 255 - data[x + 2];
+
             data[index + 3] = enhancer.opacity;
         }
     }
@@ -84,6 +95,88 @@ const binary: Function = (imageProperties: IimageProperties, threshold: number, 
             let index: number = (y * width + x) * 4;
             let grayscale: number = (data[index] + data[index + 1] + data[index + 2]) / 3;
             let binaryValue: number = grayscale > threshold ? 255 : 0;
+
+            data[index] = binaryValue;
+            data[index + 1] = binaryValue;
+            data[index + 2] = binaryValue;
+            data[index + 3] = enhancer.opacity;
+        }
+    }
+    saturation(imageProperties, enhancer.saturation);
+    brightness(imageProperties, enhancer.brightness);
+
+    return imageData
+}
+
+const segmentedBinary: Function = (imageProperties: IimageProperties, threshold: number, enhancer: IenhancersAtom): ImageData => {
+    const { width, height, imageData } = imageProperties;
+    const { data } = imageData;
+
+    const segmentedData: Array<number> = [];
+    for (let y: number = 0; y < height; y++) {
+        for (let x: number = 0; x < width; x++) {
+            let index: number = (y * width + x) * 4;
+
+            let grayscale: number = data[index] * 0.3 + data[index + 1] * 0.59 + data[index + 2] * 0.11;
+            let binaryValue: number = (grayscale > threshold) ? 255 : 0;
+            segmentedData.push(binaryValue);
+        }
+    }
+
+    const originalData: Array<number> = [];
+    for (let i: number = 0; i < segmentedData.length; i++) {
+        originalData.push(segmentedData[i] > 0 ? 255 : data[i * 4]);
+        originalData.push(segmentedData[i] > 0 ? 255 : data[i * 4 + 1]);
+        originalData.push(segmentedData[i] > 0 ? 255 : data[i * 4 + 2]);
+        originalData.push(255);
+    }
+
+    saturation(imageProperties, enhancer.saturation);
+    brightness(imageProperties, enhancer.brightness);
+
+    return new ImageData(Uint8ClampedArray.from(originalData), width, height);
+}
+
+const segmentedBinaryRange: Function = (imageProperties: IimageProperties, threshold: { t1: number, t2: number }, enhancer: IenhancersAtom): ImageData => {
+    const { width, height, imageData } = imageProperties;
+    const { data } = imageData;
+
+    const segmentedData: Array<number> = [];
+    for (let y: number = 0; y < height; y++) {
+        for (let x: number = 0; x < width; x++) {
+            let index: number = (y * width + x) * 4;
+
+            let grayscale: number = data[index] * 0.3 + data[index + 1] * 0.59 + data[index + 2] * 0.11;
+            let binaryValue: number = (grayscale >= threshold.t1 && grayscale <= threshold.t2) ? 255 : 0;
+            segmentedData.push(binaryValue);
+        }
+    }
+
+    // convert the black object into original object
+    const originalData: Array<number> = [];
+    for (let i: number = 0; i < segmentedData.length; i++) {
+        originalData.push(segmentedData[i] > 0 ? 255 : data[i * 4]);
+        originalData.push(segmentedData[i] > 0 ? 255 : data[i * 4 + 1]);
+        originalData.push(segmentedData[i] > 0 ? 255 : data[i * 4 + 2]);
+        originalData.push(255);
+    }
+
+    saturation(imageProperties, enhancer.saturation);
+    brightness(imageProperties, enhancer.brightness);
+
+    return new ImageData(Uint8ClampedArray.from(originalData), width, height);
+}
+
+
+const binaryRange: Function = (imageProperties: IimageProperties, threshold: { t1: number, t2: number }, enhancer: IenhancersAtom): ImageData => {
+    const { width, height, imageData } = imageProperties;
+    const { data } = imageData;
+
+    for (let y: number = 0; y < height; y++) {
+        for (let x: number = 0; x < width; x++) {
+            let index: number = (y * width + x) * 4;
+            let grayscale: number = (data[index] + data[index + 1] + data[index + 2]) / 3;
+            let binaryValue: number = (grayscale >= threshold.t1 && grayscale <= threshold.t2) ? 255 : 0;
 
             data[index] = binaryValue;
             data[index + 1] = binaryValue;
@@ -151,17 +244,17 @@ const sepian: Function = (imageProperties: IimageProperties, stateColor: IrgbAto
 const rgb: Function = (imageProperties: IimageProperties, color: any, stateColor: IrgbAtom, enhancer: IenhancersAtom): ImageData => {
     const { width, height, imageData } = imageProperties;
     const { data } = imageData;
-    const red: number = stateColor.red || color.red;
-    const blue: number = stateColor.blue || color.blue;
+    const red: number = (stateColor.red === null) ? color.red : stateColor.red;
+    const blue: number = (stateColor.blue === null) ? color.blue : stateColor.blue;
+    const green: number = (stateColor.green === null) ? color.green : stateColor.green;
 
     for (let y: number = 0; y < height; y++) {
         for (let x: number = 0; x < width; x++) {
             let index: number = (y * width + x) * 4;
 
-            // Set red and blue channels to maximum (255) while keeping green channel unchanged
-            data[index] = red;
-            data[index + 1] = data[index + 1]; // Leave green unchanged
-            data[index + 2] = blue;
+            data[index] = Math.min(255, red + data[index]);
+            data[index + 1] = Math.min(255, green + data[index + 1]); // Leave green unchanged
+            data[index + 2] = Math.min(255, blue + data[index + 2]);
             data[index + 3] = enhancer.opacity;
         }
     }

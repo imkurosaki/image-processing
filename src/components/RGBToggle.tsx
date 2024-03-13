@@ -28,7 +28,7 @@ export default function RGBToggle(props: { colorHandle: any }) {
         {rgbFilter.map((filter: any) => {
             return <div key={filter.id} className="flex flex-col-reverse gap-3">
                 <input
-                    type="range"
+                    type="range"  
                     min={filter.min}
                     max={filter.max}
                     name={`${filter.name}`}

@@ -1,14 +1,18 @@
 import { useRef, useState } from "react"
+import { useSetRecoilState } from "recoil";
+import { singleTresholdAtom } from "../atom/atom";
 
 export default function SliderTreshold(props: { thresholdFn: any }) {
     const [threshold, setThreshold] = useState(128);
     const debouncingRef: any = useRef<number>(0);
+    const setSingleTresholdAtom = useSetRecoilState(singleTresholdAtom);
 
     function inputHandler(inputNumber: number) {
         setThreshold(inputNumber);
 
         clearTimeout(debouncingRef.current)
         debouncingRef.current = setTimeout(() => {
+            setSingleTresholdAtom(inputNumber);
             props.thresholdFn("binary", inputNumber)
         }, 300);
     }

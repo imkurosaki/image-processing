@@ -58,6 +58,19 @@ const toggleAtom: any = atom({
     default: false
 })
 
+const singleTresholdAtom: any = atom({
+    key: "tresholdAtom",
+    default: 0
+})
+
+const rangeTresholdAtom: any = atom({
+    key: "rangeTresholdAtom",
+    default: {
+        t1: 0,
+        t2: 0
+    }
+})
+
 export {
     imageAtom,
     imageObjectAtom,
@@ -67,5 +80,7 @@ export {
     fileBackUpAtom,
     blurImageAtom,
     filterSelectionAtom,
-    toggleAtom
+    toggleAtom,
+    singleTresholdAtom,
+    rangeTresholdAtom   
 }
