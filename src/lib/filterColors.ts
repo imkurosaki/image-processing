@@ -80,9 +80,10 @@ const original: Function = (imageProperties: IimageProperties, enhancer: Ienhanc
             data[index + 3] = enhancer.opacity;
         }
     }
+
     saturation(imageProperties, enhancer.saturation);
     brightness(imageProperties, enhancer.brightness);
-
+    
     return imageData
 }
 
@@ -102,6 +103,7 @@ const binary: Function = (imageProperties: IimageProperties, threshold: number, 
             data[index + 3] = enhancer.opacity;
         }
     }
+
     saturation(imageProperties, enhancer.saturation);
     brightness(imageProperties, enhancer.brightness);
 

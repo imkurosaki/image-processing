@@ -1,5 +1,5 @@
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil"
-import { blurImageAtom, enhancersAtom, fileBackUpAtom, filterSelectionAtom, imageAtom, imageObjectAtom, rangeTresholdAtom, rgbAtom, singleTresholdAtom, toggleAtom } from "../atom/atom";
+import { useRecoilState, useRecoilValue } from "recoil"
+import { areaImageAtom, blurImageAtom, enhancersAtom, fileBackUpAtom, filterSelectionAtom, imageAtom, imageObjectAtom, rangeTresholdAtom, rgbAtom, rotateImageAtom, singleTresholdAtom, toggleAtom } from "../atom/atom";
 import { useEffect, useRef, useState } from "react";
 import { colorOptions } from "../lib/filterColors";
 import SliderTreshold from "../components/SliderTreshold";
@@ -11,6 +11,12 @@ import BarFilter from "../components/BarFilter";
 import Toggle from "../components/Toggle";
 import BackButton from "../components/BackButton";
 import RangeSliderTreshold from "../components/RangeSliderTreshold";
+import AreaImage from "../components/AreaImage";
+import { getArea, getCentroid, markRedCentroid } from "../lib/area";
+import { calculateHistogram, renderHistogram } from "../lib/histogram";
+import { binaryProjection } from "../lib/binaryProjection";
+import Histogram from "../components/Histogram";
+import BinaryProjection from "../components/BinaryProjections";
 
 export default function Dashboard() {
     const imageState: IimageAtom = useRecoilValue(imageAtom);
@@ -29,7 +35,11 @@ export default function Dashboard() {
     const singleTresholdState = useRecoilValue(singleTresholdAtom);
     const rangeTresholdState = useRecoilValue(rangeTresholdAtom);
     const canvasSegmentationRef: any = useRef(null);
+    const canvasHistogramRef: any = useRef(null);
+    const canvasBinaryVerticalRef: any = useRef(null);
+    const canvasBinaryHorizontalRef: any = useRef(null);
     const [segmentationFlag, setSegmentationFlag] = useState(false);
+    const [areaImageState, setAreaImageAtom] = useRecoilState(areaImageAtom);
 
     const colorHandle: Function = (color: string, inputThreshold?: any): any => {
         setCurrentFilter(color);
@@ -40,7 +50,7 @@ export default function Dashboard() {
             img.width = imageState.width;
             img.height = imageState.height;
 
-            img.onload = () => {
+            img.onload = async () => {
                 if (color === "binary" || color === "binaryRange") {
                     colorOptions(img, canvasRef.current, color, enhancersState, rgbAtomState, inputThreshold);
                 }
@@ -90,24 +100,48 @@ export default function Dashboard() {
     }
 
     useEffect(() => {
+        (() => {
+            const reader: FileReader = new FileReader();
+            reader.onload = (e: any): void => {
+                const img: any = new Image();
+                img.width = imageState.width;
+                img.height = imageState.height;
+
+                img.onload = () => {
+                    const response = getArea(img, canvasRef.current)
+                    const { centroidObjectX, centroidObjectY } = getCentroid(img, canvasRef.current)
+                    setAreaImageAtom({
+                        areaOfImage: response.areaOfImage,
+                        areaOfObject: response.areaOfObject,
+                        centroidImage: { x: (img.width / 2), y: (img.height / 2) },
+                        centroidObject: { x: centroidObjectX, y: centroidObjectY }
+                    })
+                    const { redData, greenData, blueData }: any = calculateHistogram(img, canvasRef.current)
+                    renderHistogram(img, canvasHistogramRef.current, redData, greenData, blueData)
+                    binaryProjection(img, canvasRef.current, canvasBinaryVerticalRef.current, canvasBinaryHorizontalRef.current)
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(imageObjectState);
+        })()
         colorHandle((currentFilter === "") ? "none" : currentFilter)
     }, [rgbAtomState, enhancersState]);
 
     return <div>
         <div className="grid grid-cols-12">
-            <div className="col-span-3 border-e border-gray-300 h-screen sticky top-0">
+            <div className="col-span-3 border-e border-gray-300 h-screen sticky top-0 overflow-auto">
                 <BarFilter />
                 {!filterSelectionState
                     ?
-                    <Adjustment colorHandle={colorHandle} />
+                    <Adjustment colorHandle={colorHandle} canvas={canvasRef.current} />
                     :
                     <Filter colorHandle={colorHandle} originalImage={originalImage} />
                 }
-                <div className="w-full flex justify-end px-5 absolute bottom-5">
-                    <BackButton />
-                </div>
             </div>
             <div className="col-span-9 flex flex-col justify-center items-center bg-gray-200 py-10">
+                <div className="w-full flex justify-end px-5 ">
+                    <BackButton />
+                </div>
                 <div className="flex flex-col gap-7">
                     <div className="flex justify-between">
                         <Toggle />
@@ -166,7 +200,30 @@ export default function Dashboard() {
                             }
                         </div>
                     }
+                    <div className="w-[320px]">
+                        <AreaImage>
+                            <button onClick={() => {
+                                const reader: FileReader = new FileReader();
+                                reader.onload = (e: any): void => {
+                                    const img: any = new Image();
+                                    img.width = imageState.width;
+                                    img.height = imageState.height;
+
+                                    const { centroidObject }: any = areaImageState;
+                                    img.onload = async () => {
+                                        markRedCentroid(img, canvasRef.current, centroidObject.x, centroidObject.y)
+                                    }
+                                    img.src = e.target.result;
+                                }
+                                reader.readAsDataURL(imageObjectState);
+                            }}
+                                className="px-3 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-900"
+                            >Centroid Object</button>
+                        </AreaImage>
+                    </div>
                 </div>
+                <Histogram canvasHistogramRef={canvasHistogramRef}/>
+                <BinaryProjection img={imageState} canvasBinaryVertical={canvasBinaryVerticalRef} canvasBinaryHorizontal={canvasBinaryHorizontalRef}/>
             </div>
         </div>
     </div>

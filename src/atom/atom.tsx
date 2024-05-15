@@ -69,6 +69,26 @@ const rangeTresholdAtom: any = atom({
         t1: 0,
         t2: 0
     }
+});
+
+const areaImageAtom: any = atom({
+    key: "areaImageAtom",
+    default: {
+        areaOfImage: 0,
+        areaOfObject: 0,
+        centroidImage: {x:0, y:0},
+        centroidObject: {x: 0, y:0}
+    }
+})
+
+const rotateImageAtom: any = atom({
+    key: "rotateImageAtom",
+    default: 0
+})
+
+const kernelAtom: any = atom({
+    key: "kernelAtom",
+    default: true
 })
 
 export {
@@ -82,5 +102,8 @@ export {
     filterSelectionAtom,
     toggleAtom,
     singleTresholdAtom,
-    rangeTresholdAtom   
+    rangeTresholdAtom,
+    areaImageAtom, 
+    rotateImageAtom,
+    kernelAtom
 }
