@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { colorShades } from "../lib/data";
-import { rgbAtom } from "../atom/atom";
-import { useSetRecoilState } from "recoil";
+import { rgbAtom, userAtom } from "../atom/atom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 
 export default function Filter(props: { colorHandle: Function, originalImage: Function }) {
@@ -19,7 +19,7 @@ export default function Filter(props: { colorHandle: Function, originalImage: Fu
         setFilterColors(newColorShades);
     }
 
-    return <div>
+    return <div className="relative h-[89%]">
         <div className="grid grid-cols-4 gap-5 p-5 text-center">
             {filterColors.map((shades: any) => {
                 if (shades.color === "binary") {
@@ -63,6 +63,28 @@ export default function Filter(props: { colorHandle: Function, originalImage: Fu
                     <p className="text-sm font-light">{shades.color}</p>
                 </div>
             })}
+        </div>
+        <div className="py-4 border-t border-gray-400 absolute bottom-0 w-full px-5">
+            <UsersCard />
+        </div>
+    </div>
+}
+
+
+function UsersCard() {
+    const userState: {
+        username: string,
+        name: string,
+        password: string,
+        hashPassword: string
+    } = useRecoilValue(userAtom)[0]
+    const name: string = userState.name;
+
+    return <div className="flex gap-5">
+            <img src="https://ui.shadcn.com/avatars/01.png" alt="" className="h-10 w-10 border border-gray-500 rounded-full"/>
+        <div>
+            <p className=" font-bold">{name}</p>
+            <p className=" text-xs text-gray-700">{userState.username}</p>
         </div>
     </div>
 }

@@ -91,6 +91,22 @@ const kernelAtom: any = atom({
     default: true
 })
 
+const usersAtom = atom({
+    key: 'usersAtom',
+    default: (() => {
+        const users = localStorage.getItem("users");
+        return users ? JSON.parse(users) : [];
+    })()
+})
+
+const userAtom = atom({
+    key: "userAtom",
+    default: (() => {
+        const user = localStorage.getItem("user");
+        return user ? JSON.parse(user) : [];
+    })()
+})
+
 export {
     imageAtom,
     imageObjectAtom,
@@ -105,5 +121,7 @@ export {
     rangeTresholdAtom,
     areaImageAtom, 
     rotateImageAtom,
-    kernelAtom
+    kernelAtom,
+    usersAtom,
+    userAtom
 }
