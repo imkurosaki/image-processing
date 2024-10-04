@@ -2,7 +2,7 @@
 
 Welcome to the **Image Processing** repository! This project showcases various techniques and tools for manipulating images using JavaScript/TypeScript. You can view a demonstration of the project in the video below:
 
-[![View Video](https://img.youtube.com/vi/zmstSaj0vls/0.jpg)](https://www.youtube.com/watch?v=zmstSaj0vls)  
+[![View Video](![image](https://github.com/user-attachments/assets/2e31db45-20c8-4c91-9c8a-0566f27cccd3))](https://www.youtube.com/watch?v=zmstSaj0vls)  
 https://youtu.be/zmstSaj0vls
 ## Features
 
