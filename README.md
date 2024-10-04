@@ -2,8 +2,8 @@
 
 Welcome to the **Image Processing** repository! This project showcases various techniques and tools for manipulating images using JavaScript/TypeScript. You can view a demonstration of the project in the video below:
 
-[![View Video](![image](https://github.com/user-attachments/assets/2e31db45-20c8-4c91-9c8a-0566f27cccd3))](https://www.youtube.com/watch?v=zmstSaj0vls)  
-https://youtu.be/zmstSaj0vls
+[![View Video](https://github.com/user-attachments/assets/80553101-d6c3-42fc-aadc-fda29c818efb)](https://www.youtube.com/watch?v=zmstSaj0vls)
+
 ## Features
 
 - **Image Filtering**: Apply filters such as grayscale, sepia, and others to enhance your images.
